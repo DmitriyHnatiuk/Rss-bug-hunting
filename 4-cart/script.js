@@ -24,7 +24,7 @@ function renderProducts() {
     card.innerHTML = `<h3>${p.name}</h3><p>${p.price} ₽</p>`;
     const btn = document.createElement("button");
     btn.textContent = "В корзину";
-    btn.addEventListener("click", addToCart);
+    btn.addEventListener("click", ()=> addToCart(p.id));
     card.appendChild(btn);
     productsEl.appendChild(card);
   });
@@ -35,19 +35,25 @@ function addToCart(id) {
   if (!product) {
     return;
   }
-  cart.push({ id: product.id, name: product.name, price: product.price, qty: 1 });
+  const isInclude = cart.findIndex((e) => e.id === Number(id));
+  isInclude < 0 ? cart.push({ 
+    id: product.id, 
+    name: product.name, 
+    price: product.price, 
+    qty: 1 }) :
+    cart[isInclude].qty += 1;
   renderCart();
 }
 
 function increaseQty(id) {
   const item = cart.find((i) => i.id === id);
-  item.qty;
+  item.qty += 1;
   renderCart();
 }
 
 function decreaseQty(id) {
   const item = cart.find((i) => i.id === id);
-  item.qty--;
+  item.qty <= 1 || item.qty--;
   renderCart();
 }
 
@@ -57,14 +63,12 @@ function removeItem(id) {
 }
 
 function applyPromo() {
-  if ((promoInput.value = "SALE10")) {
-    discount = 0.1;
-  }
+  discount = promoInput.value === "SALE10" ?  0.1 : 0
   renderCart();
 }
 
 function clearCart() {
-  cart.splice(0, 1);
+  cart = [];
   renderCart();
 }
 
@@ -72,7 +76,7 @@ function renderCart() {
   cartItemsEl.innerHTML = "";
   let total = "";
   cart.forEach((item) => {
-    const lineTotal = item.price;
+    const lineTotal = item.price * item.qty;
     const li = document.createElement("li");
     li.className = "cart-item";
     li.innerHTML = `<span>${item.name}</span>
@@ -85,16 +89,15 @@ function renderCart() {
     li.querySelector('[data-act="dec"]').addEventListener("click", () => decreaseQty(item.id));
     li.querySelector(".remove").addEventListener("click", () => removeItem(item.id));
     cartItemsEl.appendChild(li);
-    total += item.price * item.qty;
+    total = Number(total) + item.price * item.qty;
   });
 
   if (discount) {
     total = total - total * discount;
   }
-
-  badgeEl.textContent = cart.length;
-  totalEl.textContent = total;
-  emptyMsg.hidden = true;
+  badgeEl.textContent = cart.reduce((acc, i) => acc+= i.qty, 0);
+  totalEl.textContent = total || 0;
+  emptyMsg.hidden = cart.length > 0;
 }
 
 promoBtn.addEventListener("click", applyPromo);
